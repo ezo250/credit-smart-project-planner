@@ -16,6 +16,8 @@ export function getSeedState() {
     tickets: [],
     txns: [],
     audit: [],
+    finance: [],
+    targets: { propertyTarget: 12, revenueTarget: 250000000 },
     favorites: {},
     unlocked: {},
     currentUserId: null,
@@ -66,7 +68,7 @@ export async function getMongoDb(): Promise<Db> {
 export async function ensureMongoCollections() {
   const db = await getMongoDb();
 
-  const collections = ["users", "listings", "auctions", "tickets", "transactions", "audit", "siteSettings"];
+  const collections = ["users", "listings", "auctions", "tickets", "transactions", "audit", "finance", "targets", "siteSettings"];
   for (const name of collections) {
     const exists = await db.listCollections({ name }).hasNext();
     if (!exists) {
@@ -78,6 +80,8 @@ export async function ensureMongoCollections() {
   const users = db.collection("users");
   const listings = db.collection("listings");
   const auctions = db.collection("auctions");
+  const finance = db.collection("finance");
+  const targets = db.collection("targets");
 
   const userCount = await users.countDocuments();
   if (userCount === 0) await users.insertMany(seed.users);
@@ -87,6 +91,14 @@ export async function ensureMongoCollections() {
 
   const auctionCount = await auctions.countDocuments();
   if (auctionCount === 0) await auctions.insertMany(seed.auctions);
+
+  const financeCount = await finance.countDocuments();
+  if (financeCount === 0) await finance.insertMany(seed.finance);
+
+  const targetDoc = await targets.findOne({ _id: "targets" });
+  if (!targetDoc) {
+    await targets.replaceOne({ _id: "targets" }, { _id: "targets", value: seed.targets }, { upsert: true });
+  }
 
   const siteSettings = db.collection("siteSettings");
   const siteSettingsDoc = await siteSettings.findOne({ _id: "siteSettings" });
@@ -105,6 +117,8 @@ export async function persistStateToMongo(state: unknown) {
       tickets: db.collection("tickets"),
       transactions: db.collection("transactions"),
       audit: db.collection("audit"),
+      finance: db.collection("finance"),
+      targets: db.collection("targets"),
       siteSettings: db.collection("siteSettings"),
     };
 
@@ -115,6 +129,8 @@ export async function persistStateToMongo(state: unknown) {
       collections.tickets.deleteMany({}),
       collections.transactions.deleteMany({}),
       collections.audit.deleteMany({}),
+      collections.finance.deleteMany({}),
+      collections.targets.deleteMany({}),
     ]);
 
     const snapshot = state as Record<string, unknown>;
@@ -125,6 +141,8 @@ export async function persistStateToMongo(state: unknown) {
       collections.tickets.insertMany((snapshot.tickets ?? []) as Record<string, unknown>[]),
       collections.transactions.insertMany((snapshot.txns ?? []) as Record<string, unknown>[]),
       collections.audit.insertMany((snapshot.audit ?? []) as Record<string, unknown>[]),
+      collections.finance.insertMany((snapshot.finance ?? []) as Record<string, unknown>[]),
+      collections.targets.replaceOne({ _id: "targets" }, { _id: "targets", value: snapshot.targets ?? getSeedState().targets }, { upsert: true }),
       collections.siteSettings.replaceOne({ _id: "siteSettings" }, { _id: "siteSettings", value: snapshot.siteSettings ?? getSeedState().siteSettings }, { upsert: true }),
     ];
 
@@ -138,13 +156,15 @@ export async function persistStateToMongo(state: unknown) {
 export async function loadStateFromMongo() {
   try {
     const db = await getMongoDb();
-    const [users, listings, auctions, tickets, txns, audit, siteSettings] = await Promise.all([
+    const [users, listings, auctions, tickets, txns, audit, finance, targets, siteSettings] = await Promise.all([
       db.collection("users").find({}).toArray(),
       db.collection("listings").find({}).toArray(),
       db.collection("auctions").find({}).toArray(),
       db.collection("tickets").find({}).toArray(),
       db.collection("transactions").find({}).toArray(),
       db.collection("audit").find({}).toArray(),
+      db.collection("finance").find({}).toArray(),
+      db.collection("targets").findOne({ _id: "targets" }),
       db.collection("siteSettings").findOne({ _id: "siteSettings" }),
     ]);
 
@@ -155,6 +175,8 @@ export async function loadStateFromMongo() {
       tickets,
       txns,
       audit,
+      finance,
+      targets: targets?.value ?? getSeedState().targets,
       favorites: {},
       unlocked: {},
       currentUserId: null,

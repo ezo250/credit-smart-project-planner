@@ -89,6 +89,25 @@ describe("App routing", () => {
     expect(screen.getByRole("button", { name: /public site/i })).toBeInTheDocument();
   });
 
+  it("exposes finance, target and management tools for the super admin with real data-backed records", () => {
+    act(() => {
+      setState(() => ({
+        currentUserId: "u1",
+        finance: [{ id: "fin-1", type: "income", category: "Property sale", amount: 4500000, date: Date.now(), note: "Apartment closing" }],
+        targets: { propertyTarget: 12, revenueTarget: 250000000 },
+        listings: [
+          { id: "l-assign", ref: "L-ASSIGN", title: "Assigned villa", description: "Sample listing", category: "house", type: "sale", price: 9000000, district: "Kicukiro", sector: "Kanombe", img: "https://example.com/villa.jpg", features: [], status: "approved", ownerId: "u1", createdAt: Date.now(), premium: [], premiumPrice: 0, assignedAgentId: "u3" },
+        ],
+      }));
+    });
+
+    render(<Route.options.component />);
+
+    expect(screen.getByRole("button", { name: /^finance$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^target$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^management$/i })).toBeInTheDocument();
+  });
+
   it("uses AmSi Real Estate branding in its route metadata instead of the legacy IsokoHub copy", () => {
     const meta = Route.options.head?.() ?? { meta: [] };
     const titles = meta.meta.filter((item) => item.title).map((item) => item.title);

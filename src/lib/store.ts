@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { seedAuctions, seedListings, seedUsers, type Audit, type Auction, type Listing, type Ticket, type Txn, type User } from "./data";
+import { seedAuctions, seedListings, seedUsers, type Audit, type Auction, type FinanceRecord, type Listing, type TargetsState, type Ticket, type Txn, type User } from "./data";
 
 async function syncToMongo(snapshot: State) {
   if (typeof window === "undefined") return;
@@ -39,19 +39,21 @@ export interface SiteSettings {
 }
 
 export interface State {
-  users: User[]; listings: Listing[]; auctions: Auction[]; tickets: Ticket[]; txns: Txn[]; audit: Audit[];
+  users: User[]; listings: Listing[]; auctions: Auction[]; tickets: Ticket[]; txns: Txn[]; audit: Audit[]; finance: FinanceRecord[]; targets: TargetsState;
   favorites: Record<string, string[]>; unlocked: Record<string, string[]>; currentUserId: string | null;
   notifications: { userId: string; text: string; at: number }[];
   siteSettings: SiteSettings;
 }
 const KEY = "rw-market-v2";
-const seed = (): State => ({ users: seedUsers, listings: seedListings, auctions: seedAuctions, tickets: [], txns: [], audit: [], favorites: {}, unlocked: {}, currentUserId: null, notifications: [], siteSettings: { websiteName: "AmSi Real Estate", logo: "AmSi Real Estate", superAdminName: "Amani Alain", profilePicture: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80" } });
+const seed = (): State => ({ users: seedUsers, listings: seedListings, auctions: seedAuctions, tickets: [], txns: [], audit: [], finance: [], targets: { propertyTarget: 12, revenueTarget: 250000000 }, favorites: {}, unlocked: {}, currentUserId: null, notifications: [], siteSettings: { websiteName: "AmSi Real Estate", logo: "AmSi Real Estate", superAdminName: "Amani Alain", profilePicture: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80" } });
 
 function normalizeState(partial: Partial<State>): State {
   const base = seed();
   const next: State = {
     ...base,
     ...partial,
+    finance: partial.finance ?? base.finance,
+    targets: { ...base.targets, ...(partial.targets ?? {}) },
     users: (partial.users ?? base.users).map((user) => {
       if (user.email?.toLowerCase() === "super@demo.rw" || user.role === "superadmin") {
         return { ...user, name: "Amani Alain", role: "superadmin", email: "super@demo.rw", password: "demo123", active: true };

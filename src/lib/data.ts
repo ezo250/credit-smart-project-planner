@@ -74,6 +74,18 @@ export type Status = "draft" | "pending" | "approved" | "rejected" | "suspended"
 export interface User { id: string; name: string; email: string; password: string; role: Role; active: boolean; createdAt: number; profilePicture?: string }
 export interface PremiumField { label: string; value: string }
 export interface Coordinates { lat: number; lng: number }
+export interface FinanceRecord {
+  id: string;
+  type: "income" | "expense";
+  category: string;
+  amount: number;
+  date: number;
+  note: string;
+}
+export interface TargetsState {
+  propertyTarget: number;
+  revenueTarget: number;
+}
 export interface Listing {
   id: string; ref: string; title: string; description: string; category: Category; type: ListingType;
   price: number; district: string; sector: string; img: string; location?: Coordinates | string;
@@ -81,6 +93,7 @@ export interface Listing {
   status: Status; ownerId: string; featured?: boolean; verified?: boolean; sponsored?: boolean;
   createdAt: number; premium: PremiumField[]; premiumPrice: number; reason?: string;
   negotiable?: boolean; headline?: string[];
+  assignedAgentId?: string;
   details?: { group: string; items: [string, string][] }[];
   equipment?: string[];
   descriptions?: { en: string; rw: string; fr: string };

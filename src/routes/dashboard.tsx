@@ -44,11 +44,14 @@ const roleLabel: Record<Role, string> = {
   user: "User",
 };
 
-type DashboardSection = "overview" | "users" | "agents" | "customers" | "listings" | "ads" | "system";
+type DashboardSection = "overview" | "users" | "agents" | "customers" | "listings" | "ads" | "system" | "finance" | "target" | "management";
 
 const navItems: Record<Role, { label: string; key: DashboardSection; icon: typeof LayoutDashboard }[]> = {
   superadmin: [
     { label: "Dashboard", key: "overview", icon: LayoutDashboard },
+    { label: "Finance", key: "finance", icon: BadgeDollarSign },
+    { label: "Target", key: "target", icon: TrendingUp },
+    { label: "Management", key: "management", icon: UserCog },
     { label: "User Management", key: "users", icon: Users },
     { label: "Agents", key: "agents", icon: CircleUserRound },
     { label: "Customers", key: "customers", icon: Users },
@@ -100,6 +103,8 @@ function Dashboard() {
   const [agentSearch, setAgentSearch] = useState("");
   const [customerSearch, setCustomerSearch] = useState("");
   const [userForm, setUserForm] = useState({ name: "", email: "", role: "admin" as Role, password: "demo123", profilePicture: "" });
+  const [financeForm, setFinanceForm] = useState({ type: "income" as "income" | "expense", category: "Property sale", amount: "", note: "" });
+  const [targetForm, setTargetForm] = useState({ propertyTarget: String(s.targets.propertyTarget), revenueTarget: String(s.targets.revenueTarget) });
   const [settingsForm, setSettingsForm] = useState({
     websiteName: s.siteSettings.websiteName,
     logo: s.siteSettings.logo,
@@ -146,6 +151,13 @@ function Dashboard() {
     });
   }, [s.siteSettings]);
 
+  useEffect(() => {
+    setTargetForm({
+      propertyTarget: String(s.targets.propertyTarget),
+      revenueTarget: String(s.targets.revenueTarget),
+    });
+  }, [s.targets]);
+
   const safeMe = me ?? {
     id: "guest",
     name: s.siteSettings.superAdminName,
@@ -168,8 +180,12 @@ function Dashboard() {
   const selectedUser = s.users.find((user) => user.id === selectedUserId) ?? s.users[0] ?? null;
   const agentRows = s.users.filter((user) => user.role === "commissioner");
   const customerAccounts = s.users.filter((user) => user.role === "user");
+  const myManagedListings = s.listings.filter((listing) => listing.assignedAgentId === safeMe.id);
   const selectedListing = s.listings.find((listing) => listing.id === selectedListingId) ?? null;
   const selectedAd = ads.find((ad) => ad.id === selectedAdId) ?? null;
+  const totalIncome = s.finance.filter((entry) => entry.type === "income").reduce((sum, entry) => sum + entry.amount, 0);
+  const totalExpenses = s.finance.filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + entry.amount, 0);
+  const netProfit = totalIncome - totalExpenses;
 
   const weeklySales = useMemo(() => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -381,6 +397,54 @@ function Dashboard() {
     notify(listing.ownerId, `Your listing ${listing.ref} was ${status}`);
     log(`${status} listing ${listing.ref}`);
     toast.success(`Listing ${status}`);
+  };
+
+  const saveFinanceEntry = (event: React.FormEvent) => {
+    event.preventDefault();
+    const amount = Number(financeForm.amount);
+    if (!financeForm.category || !Number.isFinite(amount) || amount <= 0) {
+      toast.error("Enter a valid amount and category for the finance record");
+      return;
+    }
+
+    const entry = {
+      id: `fin-${Date.now()}`,
+      type: financeForm.type,
+      category: financeForm.category,
+      amount,
+      date: Date.now(),
+      note: financeForm.note.trim() || "Recorded from the dashboard",
+    };
+
+    setState((st) => ({ finance: [entry, ...st.finance] }));
+    log(`Recorded ${financeForm.type} entry ${entry.category}`);
+    toast.success(`${financeForm.type === "income" ? "Income" : "Expense"} record added`);
+    setFinanceForm({ type: financeForm.type, category: financeForm.category, amount: "", note: "" });
+  };
+
+  const saveTargets = (event: React.FormEvent) => {
+    event.preventDefault();
+    const propertyTarget = Number(targetForm.propertyTarget);
+    const revenueTarget = Number(targetForm.revenueTarget);
+
+    if (!Number.isFinite(propertyTarget) || !Number.isFinite(revenueTarget) || propertyTarget <= 0 || revenueTarget <= 0) {
+      toast.error("Set valid property and revenue targets");
+      return;
+    }
+
+    setState(() => ({ targets: { propertyTarget, revenueTarget } }));
+    log(`Updated property and revenue targets`);
+    toast.success("Targets updated successfully");
+  };
+
+  const assignListingToAgent = (listingId: string, agentId: string) => {
+    setState((st) => ({ listings: st.listings.map((listing) => listing.id === listingId ? { ...listing, assignedAgentId: agentId || undefined } : listing) }));
+    const agent = s.users.find((user) => user.id === agentId);
+    const listing = s.listings.find((item) => item.id === listingId);
+    if (agent && listing) {
+      notify(agentId, `You were assigned to manage ${listing.title}`);
+      toast.success(`${listing.title} assigned to ${agent.name}`);
+    }
   };
 
   const renderOverview = () => (
@@ -828,6 +892,141 @@ function Dashboard() {
     </div>
   );
 
+  const renderFinance = () => (
+    <div className="space-y-6">
+      <section className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-2xl border bg-card p-4 shadow-sm"><p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Income</p><p className="mt-3 text-3xl font-bold">{fmtRWF(totalIncome)}</p></div>
+        <div className="rounded-2xl border bg-card p-4 shadow-sm"><p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Expenses</p><p className="mt-3 text-3xl font-bold">{fmtRWF(totalExpenses)}</p></div>
+        <div className="rounded-2xl border bg-card p-4 shadow-sm"><p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Net profit</p><p className="mt-3 text-3xl font-bold">{fmtRWF(netProfit)}</p></div>
+      </section>
+
+      <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <section className="rounded-2xl border bg-card p-5 shadow-sm">
+          <h3 className="text-lg font-bold">Record finance movement</h3>
+          <form onSubmit={saveFinanceEntry} className="mt-5 space-y-3">
+            <div className="grid gap-3 md:grid-cols-2">
+              <select value={financeForm.type} onChange={(e) => setFinanceForm({ ...financeForm, type: e.target.value as "income" | "expense" })} className="h-11 rounded-xl border bg-background px-3 text-sm">
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+              </select>
+              <input value={financeForm.category} onChange={(e) => setFinanceForm({ ...financeForm, category: e.target.value })} className="h-11 rounded-xl border bg-background px-3 text-sm" placeholder="Category" />
+            </div>
+            <input type="number" min="0" value={financeForm.amount} onChange={(e) => setFinanceForm({ ...financeForm, amount: e.target.value })} className="h-11 w-full rounded-xl border bg-background px-3 text-sm" placeholder="Amount" />
+            <textarea value={financeForm.note} onChange={(e) => setFinanceForm({ ...financeForm, note: e.target.value })} className="min-h-[96px] w-full rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Note" />
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setFinanceForm({ type: "income", category: "Property sale", amount: "", note: "" })}>Clear</Button>
+              <Button type="submit">Save record</Button>
+            </div>
+          </form>
+        </section>
+
+        <section className="rounded-2xl border bg-card p-5 shadow-sm">
+          <h3 className="text-lg font-bold">Finance ledger</h3>
+          <div className="mt-5 space-y-3">
+            {s.finance.length ? s.finance.slice(0, 8).map((entry) => (
+              <div key={entry.id} className="flex items-center justify-between rounded-xl border bg-muted/20 p-3">
+                <div>
+                  <p className="font-medium">{entry.category}</p>
+                  <p className="text-xs text-muted-foreground">{entry.type === "income" ? "Income" : "Expense"} · {new Date(entry.date).toLocaleDateString()}</p>
+                </div>
+                <div className="text-right">
+                  <p className={`font-bold ${entry.type === "income" ? "text-emerald-600" : "text-amber-600"}`}>{entry.type === "income" ? "+" : "-"}{fmtRWF(entry.amount)}</p>
+                  <p className="text-xs text-muted-foreground">{entry.note}</p>
+                </div>
+              </div>
+            )) : (
+              <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">No finance entries yet.</div>
+            )}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+
+  const renderTarget = () => (
+    <div className="space-y-6">
+      <section className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-2xl border bg-card p-5 shadow-sm">
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Property target</p>
+          <p className="mt-3 text-3xl font-bold">{s.targets.propertyTarget}</p>
+          <p className="mt-2 text-sm text-muted-foreground">Properties to close this cycle</p>
+        </div>
+        <div className="rounded-2xl border bg-card p-5 shadow-sm">
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Revenue target</p>
+          <p className="mt-3 text-3xl font-bold">{fmtRWF(s.targets.revenueTarget)}</p>
+          <p className="mt-2 text-sm text-muted-foreground">Gross income target for the period</p>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border bg-card p-5 shadow-sm">
+        <h3 className="text-lg font-bold">Set targets</h3>
+        <form onSubmit={saveTargets} className="mt-5 grid gap-3 md:grid-cols-2">
+          <input type="number" min="0" value={targetForm.propertyTarget} onChange={(e) => setTargetForm({ ...targetForm, propertyTarget: e.target.value })} className="h-11 rounded-xl border bg-background px-3 text-sm" placeholder="Property target" />
+          <input type="number" min="0" value={targetForm.revenueTarget} onChange={(e) => setTargetForm({ ...targetForm, revenueTarget: e.target.value })} className="h-11 rounded-xl border bg-background px-3 text-sm" placeholder="Revenue target" />
+          <div className="md:col-span-2 flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setTargetForm({ propertyTarget: String(s.targets.propertyTarget), revenueTarget: String(s.targets.revenueTarget) })}>Reset</Button>
+            <Button type="submit">Save targets</Button>
+          </div>
+        </form>
+      </section>
+    </div>
+  );
+
+  const renderManagement = () => (
+    <div className="space-y-6">
+      <section className="rounded-2xl border bg-card p-5 shadow-sm">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-bold">Agent and listing management</h3>
+          <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">{s.listings.filter((listing) => listing.assignedAgentId).length} assigned</span>
+        </div>
+
+        <div className="space-y-4">
+          {s.listings.map((listing) => (
+            <div key={listing.id} className="rounded-xl border bg-muted/20 p-3">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-center gap-3">
+                  <img src={listing.img} alt={listing.title} className="h-12 w-12 rounded-lg object-cover" />
+                  <div>
+                    <p className="font-medium">{listing.title}</p>
+                    <p className="text-xs text-muted-foreground">{listing.ref} · {listing.district}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <label className="text-xs font-medium text-muted-foreground">Assigned agent</label>
+                  <select value={listing.assignedAgentId ?? ""} onChange={(e) => assignListingToAgent(listing.id, e.target.value)} className="h-10 rounded-xl border bg-background px-3 text-sm">
+                    <option value="">Unassigned</option>
+                    {agentRows.map((agent) => (
+                      <option key={agent.id} value={agent.id}>{agent.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {safeMe.role === "commissioner" && (
+        <section className="rounded-2xl border bg-card p-5 shadow-sm">
+          <h3 className="text-lg font-bold">My managed listings</h3>
+          <div className="mt-4 space-y-3">
+            {myManagedListings.length ? myManagedListings.map((listing) => (
+              <div key={listing.id} className="flex items-center justify-between rounded-xl border bg-muted/20 p-3">
+                <div>
+                  <p className="font-medium">{listing.title}</p>
+                  <p className="text-xs text-muted-foreground">{listing.ref} · {listing.district}</p>
+                </div>
+                <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-600">{listing.status}</span>
+              </div>
+            )) : (
+              <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">No listings assigned to you yet.</div>
+            )}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+
   const renderSystem = () => (
     <div className="space-y-6">
       <section className="grid gap-4 md:grid-cols-3">
@@ -863,6 +1062,9 @@ function Dashboard() {
       case "listings": return renderListings();
       case "ads": return renderAds();
       case "system": return renderSystem();
+      case "finance": return renderFinance();
+      case "target": return renderTarget();
+      case "management": return renderManagement();
       case "overview":
       default: return renderOverview();
     }
