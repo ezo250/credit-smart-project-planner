@@ -21,7 +21,7 @@ export function SiteHeader() {
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4">
         <Link to="/" className="flex items-center gap-2 font-bold text-navy">
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground"><Building2 className="h-5 w-5" /></span>
-          <span className="text-lg leading-none">{siteSettings.websiteName || "IsokoHub"}</span>
+          <span className="text-lg leading-none">{siteSettings.websiteName || "AmSi Real Estate"}</span>
         </Link>
         <nav className="hidden flex-1 items-center gap-1 md:flex">
           {nav.map((n) => (
@@ -58,10 +58,10 @@ export function SiteFooter() {
   return (
     <footer className="mt-16 bg-navy text-navy-foreground">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 md:grid-cols-4">
-        <div><p className="text-lg font-bold">{siteSettings.websiteName || "IsokoHub"}</p><p className="mt-2 text-sm opacity-70">Rwanda's premium marketplace to buy, rent, sell and auction.</p></div>
+        <div><p className="text-lg font-bold">{siteSettings.websiteName || "AmSi Real Estate"}</p><p className="mt-2 text-sm opacity-70">Rwanda's premium marketplace to buy, rent, sell and auction.</p></div>
         <div className="text-sm opacity-80"><p className="font-semibold opacity-100">Marketplace</p><Link to="/listings" className="block mt-2">Listings</Link><Link to="/auctions" className="block">Auctions</Link><Link to="/advisor" className="block">AI Advisor</Link></div>
         <div className="text-sm opacity-80"><p className="font-semibold opacity-100">Company</p><Link to="/contact" className="block mt-2">Contact & support</Link><p>Terms · Privacy</p></div>
-        <div className="text-sm opacity-80"><p className="font-semibold opacity-100">Contact</p><p className="mt-2">KG 7 Ave, Kigali</p><p>support@isokohub.rw</p></div>
+        <div className="text-sm opacity-80"><p className="font-semibold opacity-100">Contact</p><p className="mt-2">KG 7 Ave, Kigali</p><p>support@amsirealestate.rw</p></div>
       </div>
       <p className="border-t border-sidebar-border py-4 text-center text-xs opacity-60">Developed by Amani Alain</p>
     </footer>

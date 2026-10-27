@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/listings/$id")({
-  head: () => ({ meta: [{ title: "Listing details — IsokoHub" }, { name: "description", content: "Listing details, features and premium information." }, { property: "og:title", content: "Listing — IsokoHub" }, { property: "og:description", content: "View listing details on IsokoHub." }] }),
+  head: () => ({ meta: [{ title: "Listing details — AmSi Real Estate" }, { name: "description", content: "Listing details, features and premium information." }, { property: "og:title", content: "Listing — AmSi Real Estate" }, { property: "og:description", content: "View listing details on AmSi Real Estate." }] }),
   component: Detail,
 });
 

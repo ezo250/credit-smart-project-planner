@@ -5,7 +5,7 @@ import { setState, uid, useMe } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/contact")({
-  head: () => ({ meta: [{ title: "Contact & support — IsokoHub" }, { name: "description", content: "Send an inquiry or complaint and get a ticket number." }, { property: "og:title", content: "Contact — IsokoHub" }, { property: "og:description", content: "Reach IsokoHub support." }] }),
+  head: () => ({ meta: [{ title: "Contact & support — AmSi Real Estate" }, { name: "description", content: "Send an inquiry or complaint and get a ticket number." }, { property: "og:title", content: "Contact — AmSi Real Estate" }, { property: "og:description", content: "Reach AmSi Real Estate support." }] }),
   component: Contact,
 });
 
@@ -24,7 +24,7 @@ function Contact() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <h1 className="text-3xl font-bold">Contact & support</h1>
-      <p className="mt-1 text-muted-foreground">KG 7 Ave, Kigali · +250 788 000 000 · support@isokohub.rw</p>
+      <p className="mt-1 text-muted-foreground">KG 7 Ave, Kigali · +250 788 000 000 · support@amsirealestate.rw</p>
       {ticket && <p className="mt-4 rounded-xl bg-success/15 p-4 text-sm">Request received. Your ticket number is <b>{ticket}</b>. {me ? "Track it in your dashboard." : ""}</p>}
       <form onSubmit={submit} className="mt-6 space-y-3 rounded-2xl border bg-card p-6">
         {!me && <input className={inp} placeholder="Your name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />}

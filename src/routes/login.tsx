@@ -5,7 +5,7 @@ import { getState, log, setState, uid } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Sign in — IsokoHub" }, { name: "description", content: "Sign in or create an IsokoHub account." }, { property: "og:title", content: "Sign in — IsokoHub" }, { property: "og:description", content: "Access your IsokoHub dashboard." }] }),
+  head: () => ({ meta: [{ title: "Sign in — AmSi Real Estate" }, { name: "description", content: "Sign in or create an AmSi Real Estate account." }, { property: "og:title", content: "Sign in — AmSi Real Estate" }, { property: "og:description", content: "Access your AmSi Real Estate dashboard." }] }),
   component: Login,
 });
 

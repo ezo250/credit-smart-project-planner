@@ -14,7 +14,7 @@ export const Route = createFileRoute("/listings")({
     type: (s.type as string) || undefined, min: s.min ? Number(s.min) : undefined, max: s.max ? Number(s.max) : undefined,
     sort: (s.sort as string) || undefined, page: s.page ? Number(s.page) : undefined,
   }),
-  head: () => ({ meta: [{ title: "Property & product listings — IsokoHub" }, { name: "description", content: "Browse land, houses, apartments and cars for sale or rent in Rwanda." }, { property: "og:title", content: "Listings — IsokoHub" }, { property: "og:description", content: "Browse verified listings across Rwanda." }] }),
+  head: () => ({ meta: [{ title: "Property & product listings — AmSi Real Estate" }, { name: "description", content: "Browse land, houses, apartments and cars for sale or rent in Rwanda." }, { property: "og:title", content: "Listings — AmSi Real Estate" }, { property: "og:description", content: "Browse verified listings across Rwanda." }] }),
   component: ListingsPage,
 });
 

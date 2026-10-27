@@ -31,8 +31,8 @@ describe("MongoDB connection setup", () => {
       listings: getSeedState().listings,
       currentUserId: "super-admin",
       siteSettings: {
-        websiteName: "IsokoHub",
-        logo: "IsokoHub",
+        websiteName: "AmSi Real Estate",
+        logo: "AmSi Real Estate",
         superAdminName: "Amani Alain",
         profilePicture: "https://example.com/avatar.png",
       },

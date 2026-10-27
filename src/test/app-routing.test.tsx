@@ -89,4 +89,12 @@ describe("App routing", () => {
     expect(screen.getByRole("button", { name: /public site/i })).toBeInTheDocument();
   });
 
+  it("uses AmSi Real Estate branding in its route metadata instead of the legacy IsokoHub copy", () => {
+    const meta = Route.options.head?.() ?? { meta: [] };
+    const titles = meta.meta.filter((item) => item.title).map((item) => item.title);
+
+    expect(titles.some((title) => /amsi real estate/i.test(String(title)))).toBe(true);
+    expect(titles.some((title) => /isokohub/i.test(String(title)))).toBe(false);
+  });
+
 });

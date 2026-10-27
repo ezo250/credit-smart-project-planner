@@ -6,7 +6,7 @@ import { getState } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/advisor")({
-  head: () => ({ meta: [{ title: "AI property investment advisor — IsokoHub" }, { name: "description", content: "Get listing recommendations that match your budget and goals." }, { property: "og:title", content: "AI Advisor — IsokoHub" }, { property: "og:description", content: "Budget-based property recommendations from real listings." }] }),
+  head: () => ({ meta: [{ title: "AI property investment advisor — AmSi Real Estate" }, { name: "description", content: "Get listing recommendations that match your budget and goals." }, { property: "og:title", content: "AI Advisor — AmSi Real Estate" }, { property: "og:description", content: "Budget-based property recommendations from real listings." }] }),
   component: Advisor,
 });
 

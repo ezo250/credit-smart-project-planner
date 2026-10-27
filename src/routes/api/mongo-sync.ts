@@ -33,7 +33,7 @@ export const ServerRoute = createServerFileRoute("/api/mongo-sync").POST(async (
       collections.tickets.insertMany((snapshot.tickets ?? []) as Record<string, unknown>[]),
       collections.transactions.insertMany((snapshot.txns ?? []) as Record<string, unknown>[]),
       collections.audit.insertMany((snapshot.audit ?? []) as Record<string, unknown>[]),
-      collections.siteSettings.replaceOne({ _id: "siteSettings" }, { _id: "siteSettings", value: snapshot.siteSettings ?? { websiteName: "IsokoHub", logo: "IsokoHub", superAdminName: "Amani Alain", profilePicture: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80" } }, { upsert: true }),
+      collections.siteSettings.replaceOne({ _id: "siteSettings" }, { _id: "siteSettings", value: snapshot.siteSettings ?? { websiteName: "AmSi Real Estate", logo: "AmSi Real Estate", superAdminName: "Amani Alain", profilePicture: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80" } }, { upsert: true }),
     ];
 
     await Promise.all(inserts);

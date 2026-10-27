@@ -33,7 +33,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export const Route = createFileRoute("/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — IsokoHub" }, { name: "description", content: "Your IsokoHub dashboard." }, { property: "og:title", content: "Dashboard — IsokoHub" }, { property: "og:description", content: "Manage listings, purchases and auctions." }] }),
+  head: () => ({ meta: [{ title: "Dashboard — AmSi Real Estate" }, { name: "description", content: "Your AmSi Real Estate dashboard." }, { property: "og:title", content: "Dashboard — AmSi Real Estate" }, { property: "og:description", content: "Manage listings, purchases and auctions." }] }),
   component: Dashboard,
 });
 
@@ -171,26 +171,50 @@ function Dashboard() {
   const selectedListing = s.listings.find((listing) => listing.id === selectedListingId) ?? null;
   const selectedAd = ads.find((ad) => ad.id === selectedAdId) ?? null;
 
+  const weeklySales = useMemo(() => {
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const counts = Array(7).fill(0);
+
+    for (const txn of s.txns) {
+      if (txn.status !== "success") continue;
+      const dayIndex = (new Date(txn.at).getDay() + 6) % 7;
+      counts[dayIndex] += 1;
+    }
+
+    return days.map((label, index) => ({ label, value: counts[index] }));
+  }, [s.txns]);
+
+  const weeklySalesTotal = weeklySales.reduce((sum, day) => sum + day.value, 0);
+  const totalRevenue = s.txns.filter((txn) => txn.status === "success").reduce((sum, txn) => sum + txn.amount, 0);
   const dashboardCards = useMemo(() => [
-    { label: "No. of Properties", value: "2,854", change: "7.34%" },
-    { label: "Regi. Agents", value: "705", change: "76.89%" },
-    { label: "Customers", value: "9,431", change: "45.00%" },
-    { label: "Revenue", value: "$78.3M", change: "8.76%" },
-  ], []);
+    { label: "No. of Properties", value: s.listings.length.toLocaleString(), change: `${approved.length} approved` },
+    { label: "Regi. Agents", value: agentRows.length.toLocaleString(), change: `${agentRows.filter((agent) => agent.active).length} active` },
+    { label: "Customers", value: customerAccounts.length.toLocaleString(), change: `${customerAccounts.filter((customer) => customer.active).length} active` },
+    { label: "Revenue", value: fmtRWF(totalRevenue), change: `${s.txns.filter((txn) => txn.status === "success").length} sales` },
+  ], [agentRows, approved.length, customerAccounts, s.listings.length, s.txns, totalRevenue]);
 
-  const transactionRows = [
-    { id: "#TZ2540", buyer: "Michael A. Miner", invoice: "IN-4563", date: "07 Jan, 2023", amount: "$45,842", method: "Mastercard", status: "Completed" },
-    { id: "#TZ3924", buyer: "Theresa T. Brose", invoice: "IN-3728", date: "03 Dec, 2023", amount: "$78,483", method: "Visa", status: "Cancelled" },
-    { id: "#TZ5032", buyer: "James L. Erickson", invoice: "IN-8265", date: "28 Sep, 2023", amount: "$83,644", method: "Paypal", status: "Completed" },
-    { id: "#TZ1695", buyer: "Lily W. Wilson", invoice: "IN-9025", date: "10 Aug, 2023", amount: "$94,305", method: "Mastercard", status: "Pending" },
-  ];
+  const transactionRows = useMemo(() => s.txns
+    .filter((txn) => txn.status === "success")
+    .slice(0, 4)
+    .map((txn) => ({
+      id: txn.ref,
+      buyer: s.users.find((user) => user.id === txn.userId)?.name ?? "Unknown buyer",
+      invoice: txn.ref,
+      date: new Date(txn.at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+      amount: fmtRWF(txn.amount),
+      method: txn.kind === "auction_fee" ? "Auction fee" : "Premium unlock",
+      status: txn.status === "success" ? "Completed" : "Cancelled",
+    })), [s.txns, s.users]);
 
-  const agentStats = [
-    { label: "Earn of the Month", value: "$3,548.09" },
-    { label: "Earn Growth", value: "44%" },
-    { label: "Conversation Rate", value: "78.8%" },
-    { label: "Gross Profit Margin", value: "34.00%" },
-  ];
+  const agentStats = useMemo(() => {
+    const successRate = Math.min(100, Math.max(0, Math.round((approved.length / Math.max(1, s.listings.length)) * 100)));
+    return [
+      { label: "Active agents", value: String(agentRows.filter((agent) => agent.active).length) },
+      { label: "Listings managed", value: String(s.listings.filter((listing) => listing.ownerId === safeMe.id || listing.status === "approved").length) },
+      { label: "Success rate", value: `${successRate}%` },
+      { label: "Gross revenue", value: fmtRWF(totalRevenue) },
+    ];
+  }, [agentRows, approved.length, safeMe.id, s.listings, totalRevenue]);
 
   const toggleUserAccount = (userId: string, nextState: boolean) => {
     const target = s.users.find((user) => user.id === userId);
@@ -279,7 +303,7 @@ function Dashboard() {
         profilePicture: settingsForm.profilePicture.trim() || st.siteSettings.profilePicture,
       },
     }));
-    log(`Updated website settings for ${settingsForm.websiteName || "IsokoHub"}`);
+    log(`Updated website settings for ${settingsForm.websiteName || "AmSi Real Estate"}`);
     toast.success("Website settings updated");
     setSettingsOpen(false);
   };
@@ -378,14 +402,14 @@ function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Sales Analytic</p>
-              <h3 className="mt-1 text-2xl font-bold">Earnings: $85,934</h3>
+              <h3 className="mt-1 text-2xl font-bold">Earnings: {fmtRWF(totalRevenue)}</h3>
             </div>
             <button type="button" className="rounded-xl border bg-muted/40 px-3 py-1.5 text-xs">View More</button>
           </div>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
-            <div className="rounded-xl bg-muted/40 p-4"><p className="text-xs text-muted-foreground">Income</p><p className="mt-2 text-xl font-bold">23,675.00</p><p className="mt-1 text-xs text-emerald-600">0.08%</p></div>
-            <div className="rounded-xl bg-muted/40 p-4"><p className="text-xs text-muted-foreground">Expenses</p><p className="mt-2 text-xl font-bold">11,562.00</p><p className="mt-1 text-xs text-amber-600">5.38%</p></div>
-            <div className="rounded-xl bg-muted/40 p-4"><p className="text-xs text-muted-foreground">Balance</p><p className="mt-2 text-xl font-bold">67,365.00</p><p className="mt-1 text-xs text-primary">2.89%</p></div>
+            <div className="rounded-xl bg-muted/40 p-4"><p className="text-xs text-muted-foreground">Income</p><p className="mt-2 text-xl font-bold">{fmtRWF(totalRevenue)}</p><p className="mt-1 text-xs text-emerald-600">{s.txns.filter((txn) => txn.status === "success").length} successful sales</p></div>
+            <div className="rounded-xl bg-muted/40 p-4"><p className="text-xs text-muted-foreground">Expenses</p><p className="mt-2 text-xl font-bold">{fmtRWF(Math.round(totalRevenue * 0.12))}</p><p className="mt-1 text-xs text-amber-600">Platform costs</p></div>
+            <div className="rounded-xl bg-muted/40 p-4"><p className="text-xs text-muted-foreground">Balance</p><p className="mt-2 text-xl font-bold">{fmtRWF(Math.max(totalRevenue - Math.round(totalRevenue * 0.12), 0))}</p><p className="mt-1 text-xs text-primary">Net sales</p></div>
           </div>
         </section>
 
@@ -407,22 +431,25 @@ function Dashboard() {
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <section className="rounded-2xl border bg-card p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold">Social Source</h3>
-            <button type="button" className="text-xs text-primary">See More Statistic</button>
+            <h3 className="text-lg font-bold">Portfolio Mix</h3>
+            <button type="button" className="text-xs text-primary">Live values</button>
           </div>
           <div className="mt-5 space-y-4">
             {[
-              ["Canada", "71.1%"],
-              ["USA", "67.0%"],
-              ["Brazil", "53.9%"],
-              ["Russia", "49.2%"],
-              ["China", "38.8%"],
-            ].map(([country, value]) => (
-              <div key={country}>
-                <div className="mb-1 flex items-center justify-between text-sm"><span>{country}</span><span>{value}</span></div>
-                <div className="h-2 rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: value }} /></div>
-              </div>
-            ))}
+              ["Approved listings", String(approved.length)],
+              ["Pending listings", String(pending.length)],
+              ["Active users", String(activeUsers.length)],
+              ["Suspended users", String(suspended.length)],
+            ].map(([label, value]) => {
+              const max = Math.max(1, approved.length + pending.length + activeUsers.length + suspended.length || 1);
+              const width = `${(Number(value) / max) * 100}%`;
+              return (
+                <div key={label}>
+                  <div className="mb-1 flex items-center justify-between text-sm"><span>{label}</span><span>{value}</span></div>
+                  <div className="h-2 rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width }} /></div>
+                </div>
+              );
+            })}
           </div>
         </section>
 
@@ -430,7 +457,7 @@ function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Weekly Sales</p>
-              <h3 className="mt-1 text-xl font-bold">Total Property Sales: 5,746</h3>
+              <h3 className="mt-1 text-xl font-bold">Total Property Sales: {weeklySalesTotal}</h3>
             </div>
             <div className="flex gap-2">
               <button type="button" className="rounded-xl border px-2 py-1 text-xs">Previous</button>
@@ -438,12 +465,20 @@ function Dashboard() {
             </div>
           </div>
           <div className="mt-5 grid grid-cols-7 items-end gap-2">
-            {[32, 42, 28, 58, 70, 48, 64].map((height, index) => (
-              <div key={index} className="flex flex-col items-center gap-2">
-                <div className="w-full rounded-t-xl bg-gradient-to-t from-primary to-primary/60" style={{ height: `${height}px` }} />
-                <span className="text-[10px] text-muted-foreground">{["M", "T", "W", "T", "F", "S", "S"][index]}</span>
-              </div>
-            ))}
+            {weeklySales.map(({ label, value }, index) => {
+              const height = value === 0 ? 18 : 18 + value * 16;
+              return (
+                <div key={label + index} className="flex flex-col items-center gap-2">
+                  <div
+                    className="w-full rounded-t-xl bg-gradient-to-t from-primary to-primary/60"
+                    style={{ height: `${height}px` }}
+                    title={`${label}: ${value} sales`}
+                    aria-label={`${label}: ${value} sales`}
+                  />
+                  <span className="text-[10px] text-muted-foreground">{label[0]}</span>
+                </div>
+              );
+            })}
           </div>
         </section>
       </div>
@@ -468,7 +503,7 @@ function Dashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transactionRows.map((row) => (
+              {transactionRows.length ? transactionRows.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell>{row.id}</TableCell>
                   <TableCell>{row.buyer}</TableCell>
@@ -483,7 +518,11 @@ function Dashboard() {
                   </TableCell>
                   <TableCell><button type="button" className="text-primary">View</button></TableCell>
                 </TableRow>
-              ))}
+              )) : (
+                <TableRow>
+                  <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">No sales recorded yet.</TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </div>

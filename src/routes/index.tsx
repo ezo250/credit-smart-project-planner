@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "IsokoHub — Buy, Rent, Sell & Auction in Rwanda" },
+      { title: "AmSi Real Estate — Buy, Rent, Sell & Auction in Rwanda" },
       { name: "description", content: "Search land, houses, apartments, cars and auctions across Rwanda. Prices in RWF." },
-      { property: "og:title", content: "IsokoHub — Rwanda's premium marketplace" },
+      { property: "og:title", content: "AmSi Real Estate — Rwanda's premium marketplace" },
       { property: "og:description", content: "Search land, houses, cars and auctions across Rwanda." },
     ],
   }),

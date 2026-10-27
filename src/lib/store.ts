@@ -45,7 +45,7 @@ export interface State {
   siteSettings: SiteSettings;
 }
 const KEY = "rw-market-v2";
-const seed = (): State => ({ users: seedUsers, listings: seedListings, auctions: seedAuctions, tickets: [], txns: [], audit: [], favorites: {}, unlocked: {}, currentUserId: null, notifications: [], siteSettings: { websiteName: "IsokoHub", logo: "IsokoHub", superAdminName: "Amani Alain", profilePicture: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80" } });
+const seed = (): State => ({ users: seedUsers, listings: seedListings, auctions: seedAuctions, tickets: [], txns: [], audit: [], favorites: {}, unlocked: {}, currentUserId: null, notifications: [], siteSettings: { websiteName: "AmSi Real Estate", logo: "AmSi Real Estate", superAdminName: "Amani Alain", profilePicture: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80" } });
 
 function normalizeState(partial: Partial<State>): State {
   const base = seed();

@@ -7,7 +7,7 @@ import { auctionWinner, log, minBid, notify, setState, uid, useMe, useStore, val
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/auctions")({
-  head: () => ({ meta: [{ title: "Live auctions — IsokoHub" }, { name: "description", content: "Bid on land, homes and cars in timed auctions." }, { property: "og:title", content: "Auctions — IsokoHub" }, { property: "og:description", content: "Timed auctions across Rwanda." }] }),
+  head: () => ({ meta: [{ title: "Live auctions — AmSi Real Estate" }, { name: "description", content: "Bid on land, homes and cars in timed auctions." }, { property: "og:title", content: "Auctions — AmSi Real Estate" }, { property: "og:description", content: "Timed auctions across Rwanda." }] }),
   component: Auctions,
 });
 

@@ -27,8 +27,8 @@ export const ServerRoute = createServerFileRoute("/api/mongo-state").GET(async (
       currentUserId: null,
       notifications: [],
       siteSettings: siteSettings?.value ?? {
-        websiteName: "IsokoHub",
-        logo: "IsokoHub",
+        websiteName: "AmSi Real Estate",
+        logo: "AmSi Real Estate",
         superAdminName: "Amani Alain",
         profilePicture: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80",
       },
@@ -46,8 +46,8 @@ export const ServerRoute = createServerFileRoute("/api/mongo-state").GET(async (
       currentUserId: null,
       notifications: [],
       siteSettings: {
-        websiteName: "IsokoHub",
-        logo: "IsokoHub",
+        websiteName: "AmSi Real Estate",
+        logo: "AmSi Real Estate",
         superAdminName: "Amani Alain",
         profilePicture: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80",
       },
