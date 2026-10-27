@@ -42,6 +42,7 @@ export interface AdCampaign {
   id: string;
   title: string;
   placement: string;
+  size: "leaderboard" | "medium-rectangle";
   budget: string;
   status: "Active" | "Paused" | "Scheduled";
   description: string;
@@ -56,10 +57,25 @@ export interface State {
   siteSettings: SiteSettings;
 }
 const KEY = "rw-market-v2";
-const seed = (): State => ({ users: seedUsers, listings: seedListings, auctions: seedAuctions, tickets: [], txns: [], audit: [], finance: [], targets: { propertyTarget: 12, revenueTarget: 250000000 }, ads: [
-  { id: "ad-1", title: "Kigali prime residences", placement: "Home page hero", budget: "$12,500", status: "Active", description: "Premium residential listings across Kigali with buyer leads and high-converting creatives.", mediaUrl: "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80", mediaType: "image" },
-  { id: "ad-2", title: "Off-plan investment campaign", placement: "Sidebar", budget: "$8,900", status: "Scheduled", description: "Targeted campaign for high-demand off-plan properties in Gasabo and Kicukiro.", mediaUrl: "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1200&q=80", mediaType: "image" },
-], favorites: {}, unlocked: {}, currentUserId: null, notifications: [], siteSettings: { websiteName: "AmSi Real Estate", logo: "AmSi Real Estate", superAdminName: "Amani Alain", profilePicture: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80" } });
+const seed = (): State => ({
+  users: seedUsers,
+  listings: seedListings,
+  auctions: seedAuctions,
+  tickets: [],
+  txns: [],
+  audit: [],
+  finance: [],
+  targets: { propertyTarget: 12, revenueTarget: 250000000 },
+  ads: [
+    { id: "ad-1", title: "Kigali prime residences", placement: "Home page hero", size: "leaderboard", budget: "$12,500", status: "Active", description: "Premium residential listings across Kigali with buyer leads and high-converting creatives.", mediaUrl: "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80", mediaType: "image" },
+    { id: "ad-2", title: "Off-plan investment campaign", placement: "Sidebar", size: "medium-rectangle", budget: "$8,900", status: "Scheduled", description: "Targeted campaign for high-demand off-plan properties in Gasabo and Kicukiro.", mediaUrl: "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1200&q=80", mediaType: "image" },
+  ],
+  favorites: {},
+  unlocked: {},
+  currentUserId: null,
+  notifications: [],
+  siteSettings: { websiteName: "AmSi Real Estate", logo: "AmSi Real Estate", superAdminName: "Amani Alain", profilePicture: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80" },
+});
 
 function normalizeState(partial: Partial<State>): State {
   const base = seed();

@@ -19,8 +19,8 @@ export function getSeedState() {
     finance: [],
     targets: { propertyTarget: 12, revenueTarget: 250000000 },
     ads: [
-      { id: "ad-1", title: "Kigali prime residences", placement: "Home page hero", budget: "$12,500", status: "Active", description: "Premium residential listings across Kigali with buyer leads and high-converting creatives.", mediaUrl: "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80", mediaType: "image" },
-      { id: "ad-2", title: "Off-plan investment campaign", placement: "Sidebar", budget: "$8,900", status: "Scheduled", description: "Targeted campaign for high-demand off-plan properties in Gasabo and Kicukiro.", mediaUrl: "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1200&q=80", mediaType: "image" },
+      { id: "ad-1", title: "Kigali prime residences", placement: "Home page hero", size: "leaderboard", budget: "$12,500", status: "Active", description: "Premium residential listings across Kigali with buyer leads and high-converting creatives.", mediaUrl: "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80", mediaType: "image" },
+      { id: "ad-2", title: "Off-plan investment campaign", placement: "Sidebar", size: "medium-rectangle", budget: "$8,900", status: "Scheduled", description: "Targeted campaign for high-demand off-plan properties in Gasabo and Kicukiro.", mediaUrl: "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1200&q=80", mediaType: "image" },
     ],
     favorites: {},
     unlocked: {},
