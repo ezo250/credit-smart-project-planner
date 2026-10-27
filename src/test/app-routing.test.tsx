@@ -4,7 +4,7 @@ import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { buildListingMapUrl, CATEGORY_IMAGES, parsePremiumText, seedListings } from "@/lib/data";
-import { setState } from "@/lib/store";
+import { getState, setState } from "@/lib/store";
 import { Route } from "@/routes/dashboard";
 import { routeTree } from "@/routeTree.gen";
 
@@ -106,6 +106,17 @@ describe("App routing", () => {
     expect(screen.getByRole("button", { name: /^finance$/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^target$/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^management$/i })).toBeInTheDocument();
+  });
+
+  it("stores ad campaigns in the shared app state so they can be rendered on the public homepage", () => {
+    act(() => {
+      setState(() => ({
+        ads: [{ id: "ad-home", title: "City view homes", placement: "Home page hero", budget: "12000", status: "Active", description: "Luxury homes", mediaUrl: "https://example.com/home.jpg", mediaType: "image" }],
+      }));
+    });
+
+    expect(getState().ads[0].title).toBe("City view homes");
+    expect(getState().ads[0].mediaType).toBe("image");
   });
 
   it("uses AmSi Real Estate branding in its route metadata instead of the legacy IsokoHub copy", () => {

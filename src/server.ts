@@ -52,7 +52,7 @@ async function handleMongoApi(request: Request): Promise<Response | null> {
     try {
       await ensureMongoCollections();
       const db = await getMongoDb();
-      const [users, listings, auctions, tickets, txns, audit, finance, targets, siteSettings] = await Promise.all([
+      const [users, listings, auctions, tickets, txns, audit, finance, targets, ads, siteSettings] = await Promise.all([
         db.collection("users").find({}).toArray(),
         db.collection("listings").find({}).toArray(),
         db.collection("auctions").find({}).toArray(),
@@ -61,6 +61,7 @@ async function handleMongoApi(request: Request): Promise<Response | null> {
         db.collection("audit").find({}).toArray(),
         db.collection("finance").find({}).toArray(),
         db.collection("targets").findOne({ _id: "targets" }),
+        db.collection("ads").find({}).toArray(),
         db.collection("siteSettings").findOne({ _id: "siteSettings" }),
       ]);
 
@@ -73,6 +74,10 @@ async function handleMongoApi(request: Request): Promise<Response | null> {
         audit,
         finance,
         targets: targets?.value ?? { propertyTarget: 12, revenueTarget: 250000000 },
+        ads: ads.length ? ads : [
+          { id: "ad-1", title: "Kigali prime residences", placement: "Home page hero", budget: "$12,500", status: "Active", description: "Premium residential listings across Kigali with buyer leads and high-converting creatives.", mediaUrl: "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80", mediaType: "image" },
+          { id: "ad-2", title: "Off-plan investment campaign", placement: "Sidebar", budget: "$8,900", status: "Scheduled", description: "Targeted campaign for high-demand off-plan properties in Gasabo and Kicukiro.", mediaUrl: "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1200&q=80", mediaType: "image" },
+        ],
         favorites: {},
         unlocked: {},
         currentUserId: null,
@@ -93,6 +98,12 @@ async function handleMongoApi(request: Request): Promise<Response | null> {
         tickets: [],
         txns: [],
         audit: [],
+        finance: [],
+        targets: { propertyTarget: 12, revenueTarget: 250000000 },
+        ads: [
+          { id: "ad-1", title: "Kigali prime residences", placement: "Home page hero", budget: "$12,500", status: "Active", description: "Premium residential listings across Kigali with buyer leads and high-converting creatives.", mediaUrl: "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80", mediaType: "image" },
+          { id: "ad-2", title: "Off-plan investment campaign", placement: "Sidebar", budget: "$8,900", status: "Scheduled", description: "Targeted campaign for high-demand off-plan properties in Gasabo and Kicukiro.", mediaUrl: "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1200&q=80", mediaType: "image" },
+        ],
         favorites: {},
         unlocked: {},
         currentUserId: null,
@@ -121,6 +132,7 @@ async function handleMongoApi(request: Request): Promise<Response | null> {
         audit: db.collection("audit"),
         finance: db.collection("finance"),
         targets: db.collection("targets"),
+        ads: db.collection("ads"),
         siteSettings: db.collection("siteSettings"),
       };
 
@@ -133,6 +145,7 @@ async function handleMongoApi(request: Request): Promise<Response | null> {
         collections.audit.deleteMany({}),
         collections.finance.deleteMany({}),
         collections.targets.deleteMany({}),
+        collections.ads.deleteMany({}),
       ]);
 
       await Promise.all([
@@ -144,6 +157,7 @@ async function handleMongoApi(request: Request): Promise<Response | null> {
         collections.audit.insertMany((snapshot.audit ?? []) as Record<string, unknown>[]),
         collections.finance.insertMany((snapshot.finance ?? []) as Record<string, unknown>[]),
         collections.targets.replaceOne({ _id: "targets" }, { _id: "targets", value: snapshot.targets ?? { propertyTarget: 12, revenueTarget: 250000000 } }, { upsert: true }),
+        collections.ads.insertMany((snapshot.ads ?? []) as Record<string, unknown>[]),
         collections.siteSettings.replaceOne({ _id: "siteSettings" }, { _id: "siteSettings", value: snapshot.siteSettings ?? { websiteName: "AmSi Real Estate", logo: "AmSi Real Estate", superAdminName: "Amani Alain", profilePicture: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80" } }, { upsert: true }),
       ]);
 

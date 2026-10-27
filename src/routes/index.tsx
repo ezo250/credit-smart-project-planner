@@ -28,6 +28,7 @@ function Index() {
   const nav = useNavigate();
   const listings = useStore((s) => s.listings.filter((l) => l.status === "approved"));
   const auctions = useStore((s) => s.auctions.filter((a) => a.status === "active"));
+  const ads = useStore((s) => s.ads);
   const [f, setF] = useState({ q: "", cat: "", district: "", type: "", max: "" });
   const go = (e: React.FormEvent) => { e.preventDefault(); nav({ to: "/listings", search: { ...f, max: f.max ? Number(f.max) : undefined } }); };
   const sel = "h-12 rounded-xl border bg-card px-3 text-sm";
@@ -55,6 +56,34 @@ function Index() {
       </section>
 
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-12">
+        {ads.length > 0 && (
+          <section className="space-y-4">
+            <div className="mb-5 flex items-end justify-between"><h2 className="text-2xl font-bold">Featured campaigns</h2><span className="text-sm font-medium text-primary">Live ads</span></div>
+            <div className="grid gap-5 lg:grid-cols-2">
+              {ads.slice(0, 2).map((ad) => (
+                <div key={ad.id} className="group overflow-hidden rounded-2xl border bg-card shadow-card">
+                  <div className="relative h-56 overflow-hidden">
+                    {ad.mediaType === "video" ? <video src={ad.mediaUrl} className="h-full w-full object-cover" muted playsInline autoPlay loop /> : <img src={ad.mediaUrl} alt={ad.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-900/20 to-transparent" />
+                    <div className="absolute left-4 top-4 rounded-full bg-primary px-2 py-1 text-[10px] font-semibold uppercase text-primary-foreground">{ad.status}</div>
+                  </div>
+                  <div className="space-y-3 p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <h3 className="text-xl font-bold">{ad.title}</h3>
+                      <span className="rounded-full border px-2 py-1 text-[10px] font-medium uppercase text-muted-foreground">{ad.placement}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{ad.description}</p>
+                    <div className="flex items-center justify-between border-t pt-3 text-sm">
+                      <span className="font-medium text-primary">Budget: {ad.budget}</span>
+                      <span className="text-muted-foreground">{ad.mediaType === "video" ? "Video" : "Image"}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         <Section title="Featured listings" to="/listings">{listings.filter((l) => l.featured || l.sponsored).slice(0, 4).map((l) => <ListingCard key={l.id} l={l} />)}</Section>
 
         <Link to="/advisor" className="flex flex-col items-start justify-between gap-4 rounded-2xl bg-primary p-8 text-primary-foreground md:flex-row md:items-center">
@@ -64,23 +93,23 @@ function Index() {
 
         <section>
           <div className="mb-5 flex items-end justify-between"><h2 className="text-2xl font-bold">Auctions ending soon</h2><Link to="/auctions" className="text-sm font-medium text-primary">View all →</Link></div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {auctions.map((a) => (
-              <Link key={a.id} to="/auctions" className="group overflow-hidden rounded-2xl border bg-card shadow-card transition hover:-translate-y-1">
-                <div className="relative aspect-[4/3] overflow-hidden">
+              <Link key={a.id} to="/auctions" className="group overflow-hidden rounded-xl border bg-card shadow-sm transition hover:-translate-y-0.5">
+                <div className="relative aspect-[16/11] overflow-hidden">
                   <img src={a.img} alt={a.title} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
                   <div className="absolute left-2 top-2 flex gap-1">
-                    <span className="rounded-md bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground">Live</span>
-                    <span className="rounded-md bg-warning px-1.5 py-0.5 text-[10px] font-medium text-navy">Hot</span>
+                    <span className="rounded-md bg-primary px-1.5 py-0.5 text-[9px] font-medium text-primary-foreground">Live</span>
+                    <span className="rounded-md bg-warning px-1.5 py-0.5 text-[9px] font-medium text-navy">Hot</span>
                   </div>
-                  <span className="absolute bottom-2 left-2 rounded-md bg-navy/70 px-1.5 py-0.5 text-[10px] font-medium text-navy-foreground">{a.bids.length} bids</span>
+                  <span className="absolute bottom-2 left-2 rounded-md bg-navy/70 px-1.5 py-0.5 text-[9px] font-medium text-navy-foreground">{a.bids.length} bids</span>
                 </div>
-                <div className="p-3">
-                  <h3 className="line-clamp-1 text-sm font-semibold">{a.title}</h3>
-                  <p className="mt-1.5 line-clamp-2 text-xs text-muted-foreground">{a.description}</p>
-                  <div className="mt-2 flex items-center justify-between border-t pt-2">
-                    <span className="text-[10px] text-muted-foreground">Entry {new Intl.NumberFormat("en-US").format(a.entryFee)} RWF</span>
-                    <span className="text-xs font-bold text-navy">{new Intl.NumberFormat("en-US").format(a.startPrice)} RWF</span>
+                <div className="p-2.5">
+                  <h3 className="line-clamp-1 text-xs font-semibold">{a.title}</h3>
+                  <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground">{a.description}</p>
+                  <div className="mt-1.5 flex items-center justify-between border-t pt-1.5">
+                    <span className="text-[9px] text-muted-foreground">Entry {new Intl.NumberFormat("en-US").format(a.entryFee)} RWF</span>
+                    <span className="text-[11px] font-bold text-navy">{new Intl.NumberFormat("en-US").format(a.startPrice)} RWF</span>
                   </div>
                 </div>
               </Link>

@@ -16,6 +16,7 @@ export const ServerRoute = createServerFileRoute("/api/mongo-sync").POST(async (
       audit: db.collection("audit"),
       finance: db.collection("finance"),
       targets: db.collection("targets"),
+      ads: db.collection("ads"),
       siteSettings: db.collection("siteSettings"),
     };
 
@@ -28,6 +29,7 @@ export const ServerRoute = createServerFileRoute("/api/mongo-sync").POST(async (
       collections.audit.deleteMany({}),
       collections.finance.deleteMany({}),
       collections.targets.deleteMany({}),
+      collections.ads.deleteMany({}),
     ]);
 
     const inserts = [
@@ -39,6 +41,7 @@ export const ServerRoute = createServerFileRoute("/api/mongo-sync").POST(async (
       collections.audit.insertMany((snapshot.audit ?? []) as Record<string, unknown>[]),
       collections.finance.insertMany((snapshot.finance ?? []) as Record<string, unknown>[]),
       collections.targets.replaceOne({ _id: "targets" }, { _id: "targets", value: snapshot.targets ?? { propertyTarget: 12, revenueTarget: 250000000 } }, { upsert: true }),
+      collections.ads.insertMany((snapshot.ads ?? []) as Record<string, unknown>[]),
       collections.siteSettings.replaceOne({ _id: "siteSettings" }, { _id: "siteSettings", value: snapshot.siteSettings ?? { websiteName: "AmSi Real Estate", logo: "AmSi Real Estate", superAdminName: "Amani Alain", profilePicture: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80" } }, { upsert: true }),
     ];
 

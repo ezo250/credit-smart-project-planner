@@ -18,6 +18,10 @@ export function getSeedState() {
     audit: [],
     finance: [],
     targets: { propertyTarget: 12, revenueTarget: 250000000 },
+    ads: [
+      { id: "ad-1", title: "Kigali prime residences", placement: "Home page hero", budget: "$12,500", status: "Active", description: "Premium residential listings across Kigali with buyer leads and high-converting creatives.", mediaUrl: "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80", mediaType: "image" },
+      { id: "ad-2", title: "Off-plan investment campaign", placement: "Sidebar", budget: "$8,900", status: "Scheduled", description: "Targeted campaign for high-demand off-plan properties in Gasabo and Kicukiro.", mediaUrl: "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1200&q=80", mediaType: "image" },
+    ],
     favorites: {},
     unlocked: {},
     currentUserId: null,
@@ -68,7 +72,7 @@ export async function getMongoDb(): Promise<Db> {
 export async function ensureMongoCollections() {
   const db = await getMongoDb();
 
-  const collections = ["users", "listings", "auctions", "tickets", "transactions", "audit", "finance", "targets", "siteSettings"];
+  const collections = ["users", "listings", "auctions", "tickets", "transactions", "audit", "finance", "targets", "siteSettings", "ads"];
   for (const name of collections) {
     const exists = await db.listCollections({ name }).hasNext();
     if (!exists) {
@@ -82,6 +86,7 @@ export async function ensureMongoCollections() {
   const auctions = db.collection("auctions");
   const finance = db.collection("finance");
   const targets = db.collection("targets");
+  const ads = db.collection("ads");
 
   const userCount = await users.countDocuments();
   if (userCount === 0) await users.insertMany(seed.users);
@@ -99,6 +104,9 @@ export async function ensureMongoCollections() {
   if (!targetDoc) {
     await targets.replaceOne({ _id: "targets" }, { _id: "targets", value: seed.targets }, { upsert: true });
   }
+
+  const adCount = await ads.countDocuments();
+  if (adCount === 0) await ads.insertMany(seed.ads);
 
   const siteSettings = db.collection("siteSettings");
   const siteSettingsDoc = await siteSettings.findOne({ _id: "siteSettings" });
@@ -119,6 +127,7 @@ export async function persistStateToMongo(state: unknown) {
       audit: db.collection("audit"),
       finance: db.collection("finance"),
       targets: db.collection("targets"),
+      ads: db.collection("ads"),
       siteSettings: db.collection("siteSettings"),
     };
 
@@ -131,6 +140,7 @@ export async function persistStateToMongo(state: unknown) {
       collections.audit.deleteMany({}),
       collections.finance.deleteMany({}),
       collections.targets.deleteMany({}),
+      collections.ads.deleteMany({}),
     ]);
 
     const snapshot = state as Record<string, unknown>;
@@ -143,6 +153,7 @@ export async function persistStateToMongo(state: unknown) {
       collections.audit.insertMany((snapshot.audit ?? []) as Record<string, unknown>[]),
       collections.finance.insertMany((snapshot.finance ?? []) as Record<string, unknown>[]),
       collections.targets.replaceOne({ _id: "targets" }, { _id: "targets", value: snapshot.targets ?? getSeedState().targets }, { upsert: true }),
+      collections.ads.insertMany((snapshot.ads ?? getSeedState().ads) as Record<string, unknown>[]),
       collections.siteSettings.replaceOne({ _id: "siteSettings" }, { _id: "siteSettings", value: snapshot.siteSettings ?? getSeedState().siteSettings }, { upsert: true }),
     ];
 
@@ -156,7 +167,7 @@ export async function persistStateToMongo(state: unknown) {
 export async function loadStateFromMongo() {
   try {
     const db = await getMongoDb();
-    const [users, listings, auctions, tickets, txns, audit, finance, targets, siteSettings] = await Promise.all([
+    const [users, listings, auctions, tickets, txns, audit, finance, targets, ads, siteSettings] = await Promise.all([
       db.collection("users").find({}).toArray(),
       db.collection("listings").find({}).toArray(),
       db.collection("auctions").find({}).toArray(),
@@ -165,6 +176,7 @@ export async function loadStateFromMongo() {
       db.collection("audit").find({}).toArray(),
       db.collection("finance").find({}).toArray(),
       db.collection("targets").findOne({ _id: "targets" }),
+      db.collection("ads").find({}).toArray(),
       db.collection("siteSettings").findOne({ _id: "siteSettings" }),
     ]);
 
@@ -177,6 +189,7 @@ export async function loadStateFromMongo() {
       audit,
       finance,
       targets: targets?.value ?? getSeedState().targets,
+      ads: ads.length ? ads : getSeedState().ads,
       favorites: {},
       unlocked: {},
       currentUserId: null,

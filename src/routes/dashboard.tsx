@@ -127,14 +127,12 @@ function Dashboard() {
     title: "",
     placement: "Home page hero",
     budget: "12000",
-    status: "Active",
+    status: "Active" as "Active" | "Paused" | "Scheduled",
     description: "",
     mediaUrl: "",
+    mediaType: "image" as "image" | "video",
   });
-  const [ads, setAds] = useState([
-    { id: "ad-1", title: "Kigali prime residences", placement: "Home page hero", budget: "$12,500", status: "Active", description: "Premium residential listings across Kigali with buyer leads and high-converting creatives.", mediaUrl: "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80" },
-    { id: "ad-2", title: "Off-plan investment campaign", placement: "Sidebar", budget: "$8,900", status: "Scheduled", description: "Targeted campaign for high-demand off-plan properties in Gasabo and Kicukiro.", mediaUrl: "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1200&q=80" },
-  ]);
+  const ads = useStore((st) => st.ads);
 
   useEffect(() => {
     if (!s.users.some((user) => user.id === selectedUserId)) {
@@ -830,24 +828,23 @@ function Dashboard() {
       status: adDraft.status,
       description: adDraft.description || "Campaign created from the dashboard.",
       mediaUrl: adDraft.mediaUrl || "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80",
+      mediaType: adDraft.mediaType,
     };
 
-    if (adFormMode === "edit" && selectedAdId) {
-      setAds((current) => current.map((ad) => (ad.id === selectedAdId ? { ...ad, ...payload } : ad)));
-      toast.success("Ad updated");
-    } else {
-      setAds((current) => [payload, ...current]);
-      toast.success("Ad published");
-    }
+    setState((st) => ({
+      ads: adFormMode === "edit" && selectedAdId ? st.ads.map((ad) => (ad.id === selectedAdId ? { ...ad, ...payload } : ad)) : [payload, ...st.ads],
+    }));
+
+    toast.success(adFormMode === "edit" ? "Ad updated" : "Ad published");
 
     setAdFormMode("add");
     setSelectedAdId(null);
-    setAdDraft({ title: "", placement: "Home page hero", budget: "12000", status: "Active", description: "", mediaUrl: "" });
+    setAdDraft({ title: "", placement: "Home page hero", budget: "12000", status: "Active", description: "", mediaUrl: "", mediaType: "image" });
     setAdModalOpen(false);
   };
 
   const deleteAd = (adId: string) => {
-    setAds((current) => current.filter((ad) => ad.id !== adId));
+    setState((st) => ({ ads: st.ads.filter((ad) => ad.id !== adId) }));
     setSelectedAdId(null);
     setAdModalOpen(false);
     toast.success("Ad deleted");
@@ -861,7 +858,7 @@ function Dashboard() {
           <Button size="sm" onClick={() => {
             setAdFormMode("add");
             setSelectedAdId(null);
-            setAdDraft({ title: "", placement: "Home page hero", budget: "12000", status: "Active", description: "", mediaUrl: "" });
+            setAdDraft({ title: "", placement: "Home page hero", budget: "12000", status: "Active", description: "", mediaUrl: "", mediaType: "image" });
             setAdModalOpen(true);
           }}>Add ad</Button>
         </div>
@@ -877,8 +874,8 @@ function Dashboard() {
         <ScrollArea className="mt-4 h-[340px] pr-2">
           <div className="space-y-3">
             {ads.map((ad) => (
-              <button key={ad.id} type="button" onClick={() => { setSelectedAdId(ad.id); setAdFormMode("edit"); setAdDraft({ title: ad.title, placement: ad.placement, budget: ad.budget, status: ad.status, description: ad.description, mediaUrl: ad.mediaUrl }); setAdModalOpen(true); }} className="flex w-full items-center gap-3 rounded-xl border bg-card p-3 text-left hover:bg-muted/40">
-                <img src={ad.mediaUrl || "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80"} alt={ad.title} className="h-16 w-16 rounded-lg object-cover" />
+              <button key={ad.id} type="button" onClick={() => { setSelectedAdId(ad.id); setAdFormMode("edit"); setAdDraft({ title: ad.title, placement: ad.placement, budget: ad.budget, status: ad.status, description: ad.description, mediaUrl: ad.mediaUrl, mediaType: ad.mediaType ?? "image" }); setAdModalOpen(true); }} className="flex w-full items-center gap-3 rounded-xl border bg-card p-3 text-left hover:bg-muted/40">
+                {ad.mediaType === "video" ? <video src={ad.mediaUrl} className="h-16 w-16 rounded-lg object-cover" muted playsInline /> : <img src={ad.mediaUrl || "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80"} alt={ad.title} className="h-16 w-16 rounded-lg object-cover" />}
                 <div className="flex-1">
                   <p className="font-medium">{ad.title}</p>
                   <p className="text-xs text-muted-foreground">{ad.placement} · {ad.budget}</p>
@@ -980,47 +977,51 @@ function Dashboard() {
           <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">{s.listings.filter((listing) => listing.assignedAgentId).length} assigned</span>
         </div>
 
-        <div className="space-y-4">
-          {s.listings.map((listing) => (
-            <div key={listing.id} className="rounded-xl border bg-muted/20 p-3">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div className="flex items-center gap-3">
-                  <img src={listing.img} alt={listing.title} className="h-12 w-12 rounded-lg object-cover" />
-                  <div>
-                    <p className="font-medium">{listing.title}</p>
-                    <p className="text-xs text-muted-foreground">{listing.ref} · {listing.district}</p>
+        <div className="max-h-[520px] overflow-y-auto pr-1">
+          <div className="space-y-4">
+            {s.listings.map((listing) => (
+              <div key={listing.id} className="rounded-xl border bg-muted/20 p-3">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-center gap-3">
+                    <img src={listing.img} alt={listing.title} className="h-12 w-12 rounded-lg object-cover" />
+                    <div>
+                      <p className="font-medium">{listing.title}</p>
+                      <p className="text-xs text-muted-foreground">{listing.ref} · {listing.district}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-medium text-muted-foreground">Assigned agent</label>
+                    <select value={listing.assignedAgentId ?? ""} onChange={(e) => assignListingToAgent(listing.id, e.target.value)} className="h-10 rounded-xl border bg-background px-3 text-sm">
+                      <option value="">Unassigned</option>
+                      {agentRows.map((agent) => (
+                        <option key={agent.id} value={agent.id}>{agent.name}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <label className="text-xs font-medium text-muted-foreground">Assigned agent</label>
-                  <select value={listing.assignedAgentId ?? ""} onChange={(e) => assignListingToAgent(listing.id, e.target.value)} className="h-10 rounded-xl border bg-background px-3 text-sm">
-                    <option value="">Unassigned</option>
-                    {agentRows.map((agent) => (
-                      <option key={agent.id} value={agent.id}>{agent.name}</option>
-                    ))}
-                  </select>
-                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
       {safeMe.role === "commissioner" && (
         <section className="rounded-2xl border bg-card p-5 shadow-sm">
           <h3 className="text-lg font-bold">My managed listings</h3>
-          <div className="mt-4 space-y-3">
-            {myManagedListings.length ? myManagedListings.map((listing) => (
-              <div key={listing.id} className="flex items-center justify-between rounded-xl border bg-muted/20 p-3">
-                <div>
-                  <p className="font-medium">{listing.title}</p>
-                  <p className="text-xs text-muted-foreground">{listing.ref} · {listing.district}</p>
+          <div className="mt-4 max-h-[260px] overflow-y-auto pr-1">
+            <div className="space-y-3">
+              {myManagedListings.length ? myManagedListings.map((listing) => (
+                <div key={listing.id} className="flex items-center justify-between rounded-xl border bg-muted/20 p-3">
+                  <div>
+                    <p className="font-medium">{listing.title}</p>
+                    <p className="text-xs text-muted-foreground">{listing.ref} · {listing.district}</p>
+                  </div>
+                  <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-600">{listing.status}</span>
                 </div>
-                <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-600">{listing.status}</span>
-              </div>
-            )) : (
-              <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">No listings assigned to you yet.</div>
-            )}
+              )) : (
+                <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">No listings assigned to you yet.</div>
+              )}
+            </div>
           </div>
         </section>
       )}
@@ -1090,7 +1091,7 @@ function Dashboard() {
             </div>
 
             <div className="mt-5 rounded-[22px] border border-white/10 bg-white/5 p-2 backdrop-blur-md">
-              <button type="button" className="flex w-full items-center justify-between rounded-xl bg-white/10 px-3 py-2.5 text-left text-sm text-white ring-1 ring-white/10" onClick={() => setShowDashboardDropdown((value) => !value)}>
+              <button type="button" className="flex w-full items-center justify-between rounded-xl bg-white/10 px-3 py-2.5 text-left text-sm text-white ring-1 ring-white/10" onClick={() => { setActiveSection("overview"); setShowDashboardDropdown((value) => !value); }}>
                 <span className="flex items-center gap-2"><LayoutDashboard className="h-4 w-4" />Dashboard</span>
                 <ChevronDown className={`h-4 w-4 transition ${showDashboardDropdown ? "rotate-180" : ""}`} />
               </button>
@@ -1101,7 +1102,14 @@ function Dashboard() {
                     <button
                       key={label}
                       type="button"
-                      onClick={() => setActiveSection(key)}
+                      onClick={() => {
+                        if (key === "overview") {
+                          setActiveSection("overview");
+                          setShowDashboardDropdown(false);
+                          return;
+                        }
+                        setActiveSection(key);
+                      }}
                       className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm transition ${activeSection === key ? "bg-gradient-to-r from-violet-500 to-blue-500 text-white shadow-lg shadow-violet-500/20" : "text-slate-200 hover:bg-white/5"}`}
                     >
                       <span className="flex items-center gap-2"><Icon className="h-4 w-4" />{label}</span>
@@ -1347,7 +1355,24 @@ function Dashboard() {
                     <option>Paused</option>
                     <option>Scheduled</option>
                   </select>
-                  <input className="h-11 rounded-xl border bg-background px-3 text-sm md:col-span-2" placeholder="Media URL (optional)" value={adDraft.mediaUrl} onChange={(e) => setAdDraft({ ...adDraft, mediaUrl: e.target.value })} />
+                  <div className="md:col-span-2 rounded-xl border bg-background p-3">
+                    <label htmlFor="ad-media-upload" className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">Upload ad media</label>
+                    <input id="ad-media-upload" type="file" accept="image/*,video/*" onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      const mediaUrl = URL.createObjectURL(file);
+                      setAdDraft({ ...adDraft, mediaUrl, mediaType: file.type.startsWith("video/") ? "video" : "image" });
+                    }} className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-xl file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary" />
+                    {(adDraft.mediaUrl || selectedAd?.mediaUrl) && (
+                      <div className="mt-3 overflow-hidden rounded-lg border bg-muted/20">
+                        {adDraft.mediaType === "video" || selectedAd?.mediaType === "video" ? (
+                          <video src={adDraft.mediaUrl || selectedAd?.mediaUrl} className="h-28 w-full object-cover" muted playsInline />
+                        ) : (
+                          <img src={adDraft.mediaUrl || selectedAd?.mediaUrl} alt="Ad preview" className="h-28 w-full object-cover" />
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <textarea className="md:col-span-2 min-h-24 rounded-xl border bg-background px-3 py-2 text-sm" placeholder="Ad description" value={adDraft.description} onChange={(e) => setAdDraft({ ...adDraft, description: e.target.value })} />
                   <div className="md:col-span-2 flex justify-end gap-2">
                     {selectedAd && <Button type="button" variant="destructive" onClick={() => deleteAd(selectedAd.id)}>Delete</Button>}
