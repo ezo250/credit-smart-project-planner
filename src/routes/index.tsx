@@ -28,17 +28,24 @@ function Index() {
   const nav = useNavigate();
   const listings = useStore((s) => s.listings.filter((l) => l.status === "approved"));
   const auctions = useStore((s) => s.auctions.filter((a) => a.status === "active"));
-  const ads = useStore((s) => s.ads);
   const [f, setF] = useState({ q: "", cat: "", district: "", type: "", max: "" });
   const go = (e: React.FormEvent) => { e.preventDefault(); nav({ to: "/listings", search: { ...f, max: f.max ? Number(f.max) : undefined } }); };
   const sel = "h-12 rounded-xl border bg-card px-3 text-sm";
   return (
     <>
-      <section className="bg-navy text-navy-foreground">
-        <div className="mx-auto max-w-7xl px-4 py-14 md:py-20">
+      <section className="relative overflow-hidden bg-navy text-navy-foreground">
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1600&q=80"
+            alt="Luxury real estate in Rwanda"
+            className="h-full w-full object-cover opacity-35 blur-[2px] scale-105"
+          />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(168,85,247,0.55),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(34,197,94,0.35),_transparent_35%),linear-gradient(135deg,rgba(15,23,42,0.84),rgba(26,32,62,0.72))]" />
+        </div>
+        <div className="relative mx-auto max-w-7xl px-4 py-14 md:py-20">
           <p className="text-sm font-medium text-primary">Rwanda's premium marketplace</p>
           <h1 className="mt-2 max-w-2xl text-4xl font-extrabold tracking-tight md:text-5xl">Find land, homes, cars & more — in seconds.</h1>
-          <form onSubmit={go} className="mt-8 grid gap-2 rounded-2xl bg-card p-3 text-foreground shadow-card md:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto]">
+          <form onSubmit={go} className="mt-8 grid gap-2 rounded-2xl bg-card/90 p-3 text-foreground shadow-card backdrop-blur-sm md:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto]">
             <input className={sel} placeholder="Search keywords…" value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} />
             <select className={sel} value={f.cat} onChange={(e) => setF({ ...f, cat: e.target.value })}><option value="">All categories</option>{CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select>
             <select className={sel} value={f.district} onChange={(e) => setF({ ...f, district: e.target.value })}><option value="">Any district</option>{DISTRICTS.map((d) => <option key={d}>{d}</option>)}</select>
@@ -56,72 +63,6 @@ function Index() {
       </section>
 
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-12">
-        {ads.length > 0 && (
-          <section className="space-y-5">
-            <div className="mb-2 flex items-end justify-between"><h2 className="text-2xl font-bold">Featured campaigns</h2><span className="text-sm font-medium text-primary">Live ads</span></div>
-
-            <div className="ad-shell overflow-hidden rounded-[30px] border border-white/60 bg-gradient-to-r from-slate-950 via-violet-950 to-slate-900 p-3 shadow-[0_26px_60px_-30px_rgba(76,29,149,0.88)]">
-              {(() => {
-                const heroAd = ads.find((ad) => ad.size === "leaderboard") ?? ads[0];
-                return (
-                  <div className="ad-card ad-card--leaderboard relative overflow-hidden rounded-[22px] border border-white/10 bg-slate-950/60">
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(168,85,247,0.9),_transparent_34%),radial-gradient(circle_at_bottom_right,_rgba(45,212,191,0.78),_transparent_33%)]" />
-                    <div className="relative flex min-h-[90px] flex-col justify-center gap-3 px-5 py-4 md:flex-row md:items-center md:justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-lg font-black text-white shadow-lg shadow-violet-500/20">A</div>
-                        <div>
-                          <p className="text-[10px] uppercase tracking-[0.22em] text-violet-200">Premium campaign</p>
-                          <h3 className="mt-1 text-xl font-black text-white">{heroAd.title}</h3>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 md:justify-end">
-                        <div className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-100">{heroAd.size}</div>
-                        <button type="button" className="ad-cta rounded-full bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-violet-950">Explore now</button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-
-            <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-              {ads.filter((ad) => ad.size !== "leaderboard").slice(0, 2).map((ad) => (
-                <div key={ad.id} className="ad-card ad-card--rectangle group relative overflow-hidden rounded-[28px] border border-white/60 bg-white/80 shadow-[0_28px_80px_-34px_rgba(31,41,55,0.45)]">
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(124,58,237,0.16),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(45,212,191,0.2),_transparent_36%)]" />
-                  <div className="relative h-full p-4 sm:p-5">
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <span className="rounded-full border border-violet-500/20 bg-violet-500/8 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-700">{ad.status}</span>
-                      <span className="rounded-full bg-slate-950 px-2 py-1 text-[9px] font-medium uppercase tracking-[0.16em] text-white">{ad.placement}</span>
-                    </div>
-
-                    <div className="relative overflow-hidden rounded-[20px] border border-white/60 bg-slate-950">
-                      {ad.mediaType === "video" ? (
-                        <video src={ad.mediaUrl} className="h-44 w-full object-cover" muted playsInline autoPlay loop />
-                      ) : (
-                        <img src={ad.mediaUrl} alt={ad.title} className="h-44 w-full object-cover transition duration-500 group-hover:scale-105" />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/10 to-transparent" />
-                    </div>
-
-                    <div className="relative mt-4 space-y-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <h3 className="text-xl font-black text-slate-900">{ad.title}</h3>
-                        <span className="rounded-md bg-emerald-500/15 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-700">{ad.size}</span>
-                      </div>
-                      <p className="line-clamp-3 text-sm leading-6 text-slate-600">{ad.description}</p>
-                      <div className="flex items-center justify-between gap-3 border-t border-slate-200 pt-3">
-                        <span className="text-sm font-bold text-violet-700">{ad.budget}</span>
-                        <button type="button" className="rounded-full bg-slate-900 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white transition hover:bg-violet-700">Book now</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
         <Section title="Featured listings" to="/listings">{listings.filter((l) => l.featured || l.sponsored).slice(0, 4).map((l) => <ListingCard key={l.id} l={l} />)}</Section>
 
         <Link to="/advisor" className="flex flex-col items-start justify-between gap-4 rounded-2xl bg-primary p-8 text-primary-foreground md:flex-row md:items-center">
