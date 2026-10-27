@@ -20,7 +20,11 @@ export function SiteHeader() {
     <header className="sticky top-0 z-30 border-b bg-card/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4">
         <Link to="/" className="flex items-center gap-2 font-bold text-navy">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground"><Building2 className="h-5 w-5" /></span>
+          {siteSettings.logo && (siteSettings.logo.startsWith("data:") || siteSettings.logo.startsWith("http")) ? (
+            <img src={siteSettings.logo} alt={siteSettings.websiteName || "AmSi Real Estate"} className="h-9 w-9 rounded-xl object-cover ring-2 ring-primary/20" />
+          ) : (
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground"><Building2 className="h-5 w-5" /></span>
+          )}
           <span className="text-lg leading-none">{siteSettings.websiteName || "AmSi Real Estate"}</span>
         </Link>
         <nav className="hidden flex-1 items-center gap-1 md:flex">

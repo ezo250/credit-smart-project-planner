@@ -27,6 +27,7 @@ import {
 import { toast } from "sonner";
 import { CATEGORIES, DISTRICTS, fmtRWF, IMAGES, parsePremiumText, type Category, type Listing, type ListingType, type Role } from "@/lib/data";
 import { log, notify, setState, useMe, useStore } from "@/lib/store";
+import { readFileAsDataUrl, readFilesAsDataUrls } from "@/lib/file-upload";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -322,14 +323,11 @@ function Dashboard() {
     setSettingsOpen(false);
   };
 
-  const handleListingMediaUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleListingMediaUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
     if (!files.length) return;
 
-    const uploadedItems = files.map((file) => ({
-      url: URL.createObjectURL(file),
-      type: file.type.startsWith("video/") ? "video" : "image",
-    }));
+    const uploadedItems = await readFilesAsDataUrls(files);
     const merged = [...listingMediaPreviews, ...uploadedItems];
     setListingMediaPreviews(merged);
     setListingForm((current) => ({ ...current, mediaUrls: merged.map((item) => item.url).join("\n") }));
@@ -337,7 +335,6 @@ function Dashboard() {
   };
 
   const clearListingMediaUploads = () => {
-    listingMediaPreviews.forEach(({ url }) => URL.revokeObjectURL(url));
     setListingMediaPreviews([]);
     setListingForm((current) => ({ ...current, mediaUrls: "" }));
   };
@@ -1163,9 +1160,29 @@ function Dashboard() {
                 </div>
                 <form onSubmit={saveSettings} className="grid gap-3 md:grid-cols-2">
                   <input className="h-11 rounded-xl border bg-background px-3 text-sm" value={settingsForm.websiteName} onChange={(e) => setSettingsForm({ ...settingsForm, websiteName: e.target.value })} placeholder="Website name" />
-                  <input className="h-11 rounded-xl border bg-background px-3 text-sm" value={settingsForm.logo} onChange={(e) => setSettingsForm({ ...settingsForm, logo: e.target.value })} placeholder="Logo text or label" />
+                  <div className="rounded-xl border bg-background p-3">
+                    <label className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">Upload logo</label>
+                    <input type="file" accept="image/*" onChange={async (event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      const nextValue = await readFileAsDataUrl(file);
+                      setSettingsForm((current) => ({ ...current, logo: nextValue }));
+                      event.target.value = "";
+                    }} className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-xl file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary" />
+                    {settingsForm.logo && <img src={settingsForm.logo} alt="Logo preview" className="mt-3 h-12 w-12 rounded-lg object-cover ring-2 ring-primary/20" />}
+                  </div>
                   <input className="h-11 rounded-xl border bg-background px-3 text-sm" value={settingsForm.superAdminName} onChange={(e) => setSettingsForm({ ...settingsForm, superAdminName: e.target.value })} placeholder="Super admin name" />
-                  <input className="h-11 rounded-xl border bg-background px-3 text-sm" value={settingsForm.profilePicture} onChange={(e) => setSettingsForm({ ...settingsForm, profilePicture: e.target.value })} placeholder="Profile picture URL" />
+                  <div className="rounded-xl border bg-background p-3">
+                    <label className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">Upload profile photo</label>
+                    <input type="file" accept="image/*" onChange={async (event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      const nextValue = await readFileAsDataUrl(file);
+                      setSettingsForm((current) => ({ ...current, profilePicture: nextValue }));
+                      event.target.value = "";
+                    }} className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-xl file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary" />
+                    {settingsForm.profilePicture && <img src={settingsForm.profilePicture} alt="Profile preview" className="mt-3 h-12 w-12 rounded-full object-cover ring-2 ring-primary/20" />}
+                  </div>
                   <div className="md:col-span-2 flex justify-end gap-2">
                     <Button type="button" variant="outline" onClick={() => setSettingsOpen(false)}>Cancel</Button>
                     <Button type="submit">Save settings</Button>
@@ -1197,7 +1214,13 @@ function Dashboard() {
                     <img src={userForm.profilePicture || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80"} alt="Profile preview" className="h-12 w-12 rounded-full object-cover ring-2 ring-primary/20" />
                     <div className="flex-1">
                       <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Profile photo</p>
-                      <input className="mt-2 h-11 w-full rounded-xl border bg-background px-3 text-sm" placeholder="https://example.com/avatar.jpg" value={userForm.profilePicture} onChange={(e) => setUserForm({ ...userForm, profilePicture: e.target.value })} />
+                      <input type="file" accept="image/*" onChange={async (event) => {
+                        const file = event.target.files?.[0];
+                        if (!file) return;
+                        const nextValue = await readFileAsDataUrl(file);
+                        setUserForm((current) => ({ ...current, profilePicture: nextValue }));
+                        event.target.value = "";
+                      }} className="mt-2 block w-full text-sm text-muted-foreground file:mr-3 file:rounded-xl file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary" />
                     </div>
                   </div>
                   <input className="h-11 w-full rounded-xl border bg-background px-3 text-sm" placeholder="Full name" value={userForm.name} onChange={(e) => setUserForm({ ...userForm, name: e.target.value })} />
@@ -1357,10 +1380,10 @@ function Dashboard() {
                   </select>
                   <div className="md:col-span-2 rounded-xl border bg-background p-3">
                     <label htmlFor="ad-media-upload" className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">Upload ad media</label>
-                    <input id="ad-media-upload" type="file" accept="image/*,video/*" onChange={(event) => {
+                    <input id="ad-media-upload" type="file" accept="image/*,video/*" onChange={async (event) => {
                       const file = event.target.files?.[0];
                       if (!file) return;
-                      const mediaUrl = URL.createObjectURL(file);
+                      const mediaUrl = await readFileAsDataUrl(file);
                       setAdDraft({ ...adDraft, mediaUrl, mediaType: file.type.startsWith("video/") ? "video" : "image" });
                     }} className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-xl file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary" />
                     {(adDraft.mediaUrl || selectedAd?.mediaUrl) && (
